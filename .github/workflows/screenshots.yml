@@ -1,0 +1,55 @@
+name: Screenshots
+
+on:
+  workflow_dispatch:
+
+jobs:
+  screenshots:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Préparer Xcode et XcodeGen
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Compiler pour le simulateur
+        run: |
+          set -o pipefail
+          xcodebuild -project MuseApp.xcodeproj -target MuseApp -sdk iphonesimulator \
+            -configuration Debug CODE_SIGNING_ALLOWED=NO build 2>&1 | tail -5
+
+      - name: Démarrer un iPhone simulé
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devs = [d for rt, ds in json.load(sys.stdin)["devices"].items() if "iOS" in rt for d in ds]
+          iphones = [d for d in devs if d["name"].startswith("iPhone") and "Pro" in d["name"] and "Max" not in d["name"]] \
+                    or [d for d in devs if d["name"].startswith("iPhone")]
+          print(iphones[-1]["udid"])')
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl list devices | grep "$UDID"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl ui "$UDID" appearance light
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3
+          xcrun simctl install "$UDID" build/Debug-iphonesimulator/MuseApp.app
+
+      - name: Captures d'écran
+        run: |
+          mkdir -p shots
+          for tab in agent muse settings; do
+            xcrun simctl terminate "$UDID" com.sebastiengagneur.museapp || true
+            xcrun simctl launch "$UDID" com.sebastiengagneur.museapp -startTab "$tab"
+            if [ "$tab" = muse ]; then sleep 25; else sleep 8; fi
+            xcrun simctl io "$UDID" screenshot "shots/$tab.png"
+          done
+          ls -la shots
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: shots/

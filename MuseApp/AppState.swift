@@ -10,6 +10,18 @@ final class AppState: ObservableObject {
     /// Navigateur de l'onglet muse.ai, partagé avec la barre du bas et l'agent.
     let web = WebViewModel()
 
+    init() {
+        // Pour les captures d'écran automatiques : `-startTab muse` ou `-startTab settings`.
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-startTab"), i + 1 < args.count {
+            switch args[i + 1] {
+            case "muse": tab = .muse
+            case "settings": tab = .settings
+            default: break
+            }
+        }
+    }
+
     /// Affiche l'onglet muse.ai, sur une page précise si demandée.
     func openMuse(_ url: URL?) {
         if let url { web.load(url) }
