@@ -31,4 +31,5 @@ jobs:
 
       - name: Résumé des erreurs
         if: failure()
-        run: grep -E "error:|warning: .*(isolat|Sendable|deprecated)" build.log | sort -u | head -100 || true
+        run: |
+          grep -E "error:" build.log | sort -u | head -100 || true
