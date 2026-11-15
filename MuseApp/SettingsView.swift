@@ -44,7 +44,7 @@ struct SettingsView: View {
                     let store = WKWebsiteDataStore.default()
                     store.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(),
                                      modifiedSince: .distantPast) {
-                        Task { @MainActor in AppState.shared.openMuse(nil) }
+                        Task { @MainActor in AppState.shared.goHome() }
                     }
                 }
             }

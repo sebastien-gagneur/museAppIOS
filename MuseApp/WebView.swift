@@ -5,10 +5,14 @@ final class WebViewModel: ObservableObject {
     @Published var progress: Double = 0
     @Published var showError = false
     @Published var errorMessage = ""
+    @Published var canGoBack = false
+    @Published var canGoForward = false
     weak var webView: WKWebView?
     var pendingURL: URL?
 
     func reload() { webView?.reload() }
+    func goBack() { webView?.goBack() }
+    func goForward() { webView?.goForward() }
 
     func load(_ url: URL) {
         if let webView { webView.load(URLRequest(url: url)) } else { pendingURL = url }
@@ -51,14 +55,22 @@ struct WebView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         let model: WebViewModel
-        private var progressObs: NSKeyValueObservation?
+        private var observations: [NSKeyValueObservation] = []
 
         init(model: WebViewModel) { self.model = model }
 
         func observe(_ webView: WKWebView) {
-            progressObs = webView.observe(\.estimatedProgress, options: [.new]) { [weak self] wv, _ in
-                DispatchQueue.main.async { self?.model.progress = wv.estimatedProgress }
-            }
+            observations = [
+                webView.observe(\.estimatedProgress, options: [.new]) { [weak self] wv, _ in
+                    DispatchQueue.main.async { self?.model.progress = wv.estimatedProgress }
+                },
+                webView.observe(\.canGoBack, options: [.new]) { [weak self] wv, _ in
+                    DispatchQueue.main.async { self?.model.canGoBack = wv.canGoBack }
+                },
+                webView.observe(\.canGoForward, options: [.new]) { [weak self] wv, _ in
+                    DispatchQueue.main.async { self?.model.canGoForward = wv.canGoForward }
+                },
+            ]
         }
 
         @objc func pullToRefresh(_ sender: UIRefreshControl) {
