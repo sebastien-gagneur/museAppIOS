@@ -1,28 +1,43 @@
-# MuseApp — le dashboard muse.ai dans une app iOS
+# Mon Agent — assistant IA personnel pour iPhone
 
-App SwiftUI minimale qui affiche https://muse.ai/dashboard dans une WKWebView.
+App SwiftUI à trois onglets :
 
-## Fonctionnalités
-- Session persistante (tu restes connecté)
-- Swipe gauche/droite pour page précédente/suivante, tirer pour rafraîchir
-- Barre de progression, message d'erreur avec « Réessayer »
-- Upload de vidéos (caméra / photothèque), lecture vidéo inline
-- Liens `target="_blank"` ouverts dans l'app, `mailto:`/`tel:` ouverts à l'extérieur
+- **Agent** : un assistant propulsé par Claude (Anthropic) qui agit pour toi.
+  - Agenda : consulte tes événements et en crée (avec ta validation).
+  - Rappels : consulte et crée des rappels (avec ta validation).
+  - E-mails : rédige un e-mail et ouvre la fenêtre d'envoi ; c'est toi qui envoies.
+  - Contacts : retrouve un numéro ou une adresse e-mail.
+  - Lieux : cherche restaurants, commerces, adresses ; ouvre l'itinéraire ; lance un appel.
+  - Recherche web : informations à jour (prix, horaires, actualités).
+  - muse.ai : ouvre l'onglet muse.ai sur la page demandée.
+- **muse.ai** : le site https://muse.ai dans l'app (session persistante, swipe arrière, tirer pour rafraîchir).
+- **Réglages** : clé API Anthropic (gardée dans le trousseau), déconnexion de muse.ai.
 
-## Générer le projet Xcode (Mac requis)
+## Installation (Mac + Xcode requis)
 ```bash
 brew install xcodegen
 ```
 ```bash
-cd MuseApp && xcodegen generate && open MuseApp.xcodeproj
+xcodegen generate && open MuseApp.xcodeproj
 ```
-Dans Xcode : cible MuseApp → Signing & Capabilities → choisis ton Team (un Apple ID gratuit suffit),
-branche ton iPhone, puis ⌘R.
+Dans Xcode : cible MuseApp → Signing & Capabilities → choisis ton Team, branche l'iPhone, ⌘R.
+Requiert iOS 17 ou plus.
 
-### Sans XcodeGen
-Xcode → New Project → iOS App (SwiftUI), nom « MuseApp », puis remplace les fichiers
-générés par les 3 fichiers de `MuseApp/`. Ajoute les clés caméra / micro / photothèque
-dans l'onglet Info de la cible.
+Au premier lancement : onglet Réglages → colle ta clé API (https://console.anthropic.com/settings/keys).
 
-## Changer l'adresse de départ
-`MuseApp/ContentView.swift`, constante `startURL`.
+## Limites
+- Les requêtes à Claude sont facturées sur ton compte Anthropic.
+- Pas d'achats ni de réservations en ligne : l'agent te donne les liens et numéros.
+- Muse de Meta n'a pas d'API publique pour piloter son agent : l'onglet muse.ai affiche le site tel quel.
+- L'e-mail utilise l'app Mail de l'iPhone ; sans compte Mail configuré, il ouvre ta messagerie par défaut.
+
+## Fichiers
+| Fichier | Rôle |
+|---|---|
+| `MuseApp/MuseApp.swift` | Point d'entrée, barre d'onglets |
+| `MuseApp/ChatView.swift` | Écran de conversation, cartes de validation |
+| `MuseApp/AgentViewModel.swift` | Boucle de l'agent, consignes, validation des actions |
+| `MuseApp/AgentTools.swift` | Outils : agenda, rappels, e-mail, contacts, lieux, muse.ai |
+| `MuseApp/ClaudeClient.swift` | Appel de l'API Messages d'Anthropic |
+| `MuseApp/MuseTab.swift`, `WebView.swift` | Onglet muse.ai |
+| `MuseApp/SettingsView.swift`, `Keychain.swift` | Réglages et stockage de la clé |

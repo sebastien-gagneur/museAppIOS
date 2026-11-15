@@ -6,8 +6,13 @@ final class WebViewModel: ObservableObject {
     @Published var showError = false
     @Published var errorMessage = ""
     weak var webView: WKWebView?
+    var pendingURL: URL?
 
     func reload() { webView?.reload() }
+
+    func load(_ url: URL) {
+        if let webView { webView.load(URLRequest(url: url)) } else { pendingURL = url }
+    }
 }
 
 struct WebView: UIViewRepresentable {
@@ -37,7 +42,8 @@ struct WebView: UIViewRepresentable {
 
         context.coordinator.observe(webView)
         model.webView = webView
-        webView.load(URLRequest(url: url))
+        webView.load(URLRequest(url: model.pendingURL ?? url))
+        model.pendingURL = nil
         return webView
     }
 

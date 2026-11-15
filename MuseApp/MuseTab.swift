@@ -1,21 +1,23 @@
 import SwiftUI
 
-/// Page chargée au démarrage. Change-la si ton dashboard est à une autre adresse.
-let startURL = URL(string: "https://muse.ai/dashboard")!
+/// Page muse.ai chargée au démarrage de l'onglet. Change-la si besoin.
+let museStartURL = URL(string: "https://muse.ai")!
 
-struct ContentView: View {
+struct MuseTab: View {
+    @EnvironmentObject private var appState: AppState
     @StateObject private var model = WebViewModel()
 
     var body: some View {
         ZStack(alignment: .top) {
-            WebView(model: model, url: startURL)
-                .ignoresSafeArea(edges: .bottom)
-
+            WebView(model: model, url: museStartURL)
             if model.progress < 1 {
                 ProgressView(value: model.progress)
                     .progressViewStyle(.linear)
-                    .tint(.accentColor)
             }
+        }
+        .onAppear { if let r = appState.museRequest { model.load(r.url) } }
+        .onChange(of: appState.museRequest?.id) { _, _ in
+            if let r = appState.museRequest { model.load(r.url) }
         }
         .alert("Impossible de charger la page",
                isPresented: $model.showError,
