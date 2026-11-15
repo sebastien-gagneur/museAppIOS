@@ -49,6 +49,16 @@ jobs:
           done
           ls -la shots
 
+      - name: Exporter les captures dans le journal
+        run: |
+          for f in shots/*.png; do
+            n=$(basename "$f" .png)
+            sips -Z 1000 -s format jpeg -s formatOptions 80 "$f" --out "shots/$n.jpg" >/dev/null
+            echo "=====BEGIN $n====="
+            base64 -i "shots/$n.jpg" | fold -w 4000
+            echo "=====END $n====="
+          done
+
       - uses: actions/upload-artifact@v4
         with:
           name: screenshots
